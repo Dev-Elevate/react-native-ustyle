@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Easy and configurable utiltity styling props support for React Native",
   "main": "lib/commonjs/index",
+  "exports": {
+    ".": "./lib/commonjs/index",
+    "./babel": "./lib/commonjs/babel"
+  },
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
   "react-native": "src/index",

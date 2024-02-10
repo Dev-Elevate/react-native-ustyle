@@ -2,14 +2,21 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-ustyle": ["./src/index"]
+      "react-native-ustyle": [
+        "./src/index"
+      ],
+      "react-native-ustyle/babel": [
+        "./src/babel"
+      ]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
-    "lib": ["esnext"],
+    "lib": [
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
