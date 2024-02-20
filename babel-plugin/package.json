@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-react-native-ustyle",
-  "version": "0.6.0",
+  "version": "0.7.2",
   "description": "Official support babel plugin for react-native-ustyle",
   "main": "out.js",
   "module": "out.js",
@@ -14,5 +14,8 @@
   "dependencies": {
     "@babel/parser": "^7.23.9",
     "@babel/traverse": "^7.23.9"
+  },
+  "devDependencies": {
+    "esbuild": "0.20.1"
   }
 }

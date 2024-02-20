@@ -4,6 +4,7 @@
 
 # XDE
 .expo/
+.yarn
 
 # VSCode
 .vscode/
