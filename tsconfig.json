@@ -5,9 +5,6 @@
       "react-native-ustyle": [
         "./src/index"
       ],
-      "react-native-ustyle/babel": [
-        "./src/babel"
-      ]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

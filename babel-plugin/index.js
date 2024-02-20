@@ -18,9 +18,7 @@ module.exports = function (babel) {
   let Styles = [];
   let styleExpression = [];
   function resolver(name) {
-    console.log(name, 'resolver');
     if (name in CONFIG) {
-      console.log(name, CONFIG[name]);
       return CONFIG[name];
     }
     return name;
@@ -31,18 +29,22 @@ module.exports = function (babel) {
         node.type === 'ImportDeclaration' &&
         node.source.value === 'react-native'
     );
-    if (!importDeclaration) {
-      programPath.node.body.unshift(
-        t.importDeclaration(
-          [
-            t.importSpecifier(
-              t.identifier('StyleSheet'),
-              t.identifier('StyleSheet')
-            ),
-          ],
-          t.stringLiteral('react-native')
-        )
-      );
+    if (importDeclaration) {
+      // delete the old importspecifier
+      // importDeclaration.specifiers = importDeclaration.specifiers.filter(
+      //   (specifier) => specifier.imported.name !== "StyleSheet"
+      // );
+      // programPath.node.body.unshift(
+      //   t.importDeclaration(
+      //     [
+      //       t.importSpecifier(
+      //         t.identifier("StyleSheet"),
+      //         t.identifier("StyleSheet")
+      //       ),
+      //     ],
+      //     t.stringLiteral("react-native")
+      //   )
+      // );
     }
   }
   function attributesToObject(attributes) {
@@ -110,8 +112,20 @@ module.exports = function (babel) {
   return {
     name: 'ast-transform', // not required
     visitor: {
-      ImportDeclaration(path) {
+      ImportDeclaration(path, opts) {
+        if (
+          opts.filename.includes('node_modules') ||
+          opts.filename.includes('.expo') ||
+          opts.filename.includes('.next')
+        )
+          return;
         if (path.node.source.value === importName) {
+          // path.node.specifiers.push(
+          //   t.importSpecifier(
+          //     t.identifier("StyleSheet"),
+          //     t.identifier("StyleSheet")
+          //   )
+          // );
           path.traverse({
             ImportSpecifier(path) {
               importedComponents.push(path.node.local.name);
@@ -121,7 +135,12 @@ module.exports = function (babel) {
         }
       },
       JSXOpeningElement(path, f, o) {
-        if (f.file.opts.filename.includes('node_modules')) return;
+        if (
+          f.filename.includes('node_modules') ||
+          f.filename.includes('.expo') ||
+          f.filename.includes('.next')
+        )
+          return;
         if (importedComponents.includes(path.node.name.name)) {
           // Create a variable declaration for the object
           addRnuStyleIdInStyleArrayOfCOmponent(path.node.attributes, styleId);
@@ -137,9 +156,7 @@ module.exports = function (babel) {
               node.type === 'VariableDeclaration' &&
               node.declarations[0].id.name === 'rnuStyles'
           );
-          console.log(declaration);
           if (declaration) {
-            // delete the old declaration
             f.file.ast.program.body = f.file.ast.program.body.filter(
               (node) =>
                 node.type !== 'VariableDeclaration' ||
@@ -149,20 +166,24 @@ module.exports = function (babel) {
             declaration = t.variableDeclaration('const', [
               t.variableDeclarator(
                 t.identifier('rnuStyles'),
-                t.callExpression(t.identifier('StyleSheet.create'), [
-                  t.objectExpression(styleExpression),
-                ])
+                // Not using StyleSheet.create since it is not working in the latest metro version
+                // t.callExpression(t.identifier("StyleSheet.create"), [
+                t.objectExpression(styleExpression)
+                // ])
               ),
             ]);
           }
           Styles.push(declaration);
-          console.log(attributesToObject(path.node.attributes));
           f.file.ast.program.body.push(declaration);
         }
       },
       Program(path, opts) {
-        if (opts.filename.includes('node_modules')) return;
-        //path.node.body.push(Styles[0]);
+        if (
+          opts.filename.includes('node_modules') ||
+          opts.filename.includes('.expo') ||
+          opts.filename.includes('.next')
+        )
+          return;
         checkIfStylesheetImportedAndImport(path);
       },
     },
