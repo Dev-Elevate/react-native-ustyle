@@ -1,6 +1,6 @@
 const path = require('path');
 const pak = require('../package.json');
-const myBabel = require('../babel-plugin');
+const myBabel = require('../babel-plugin/index');
 module.exports = function (api) {
   api.cache(true);
 

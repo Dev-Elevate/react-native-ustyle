@@ -10,5 +10,9 @@
     "build": "esbuild index.js --bundle --platform=node --packages=external --outfile=out.js"
   },
   "author": "Rohit Singh",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@babel/parser": "^7.23.9",
+    "@babel/traverse": "^7.23.9"
+  }
 }

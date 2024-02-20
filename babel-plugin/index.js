@@ -1,17 +1,44 @@
-const CONFIG = {
-  p: 'padding',
-  m: 'margin',
-  t: 'top',
-  b: 'bottom',
-  l: 'left',
-  r: 'right',
-  h: 'height',
-  w: 'width',
-  bg: 'backgroundColor',
-  c: 'color',
-};
+const fs = require('fs');
+const path = require('path');
+let CONFIG = {};
+const { parse } = require('@babel/parser');
+const { default: traverse } = require('@babel/traverse');
+
+function ObjectExpressionASTtoJSObject(AstNode) {
+  let obj = {};
+  AstNode.properties.forEach((prop) => {
+    const propName =
+      prop.key.type === 'StringLiteral' ? prop.key.value : prop.key.name;
+    if (prop.value.value !== undefined) {
+      obj[propName] = prop.value.value;
+    }
+  });
+  return obj;
+}
+
+const filePath = path.join(process.cwd(), 'rnu.config.ts');
+const fileContent = fs.readFileSync(filePath, 'utf8');
+
+const configAST = parse(fileContent, {
+  sourceType: 'module',
+  plugins: ['typescript'],
+});
+
+traverse(configAST, {
+  CallExpression(path) {
+    if (path.node.callee.name === 'createConfig') {
+      if (ObjectExpressionASTtoJSObject(path.node.arguments[0].expression)) {
+        CONFIG = ObjectExpressionASTtoJSObject(
+          path.node.arguments[0].expression
+        );
+      }
+    }
+  },
+});
+
 module.exports = function (babel) {
   const { types: t } = babel;
+
   let importName = 'react-native-ustyle';
   let importedComponents = [];
   let styleId = 0;
