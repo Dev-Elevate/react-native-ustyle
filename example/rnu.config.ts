@@ -11,7 +11,7 @@ export const CONFIG = createConfig({
   bg: 'backgroundColor',
   c: 'color',
   mx: 'marginHorizontal',
-  fy: 'borderBottomColor',
+  bc: 'borderColor',
   bw: 'borderWidth',
 } as const);
 
