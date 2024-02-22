@@ -13,6 +13,7 @@ export const CONFIG = createConfig({
   mx: 'marginHorizontal',
   bc: 'borderColor',
   bw: 'borderWidth',
+  mr: 'marginRight',
 } as const);
 
 type ConfigType = typeof CONFIG;
