@@ -81,38 +81,42 @@ module.exports = function (babel) {
 
     const obj = {};
     attributes.forEach((attribute) => {
-      const key = resolver(attribute.name.name);
-      let value;
-      if (attribute.value.type === 'JSXExpressionContainer') {
-        if (attribute.value.expression.type === 'ObjectExpression') {
-          value = {};
-          attribute.value.expression.properties.forEach((prop) => {
-            const propName =
-              prop.key.type === 'StringLiteral'
-                ? prop.key.value
-                : prop.key.name;
-            if (prop.value.value !== undefined) {
-              value[propName] = prop.value.value;
-            }
-          });
-        } else {
-          value = attribute.value.expression.value;
-        }
-      } else if (attribute.value.type === 'JSXElement') {
-        value = attributesToObject(attribute.value.openingElement.attributes);
+      if (t.isJSXSpreadAttribute(attribute)) {
+        return;
       } else {
-        value = attribute.value.value;
-      }
+        const key = resolver(attribute.name.name);
+        let value;
+        if (attribute.value.type === 'JSXExpressionContainer') {
+          if (attribute.value.expression.type === 'ObjectExpression') {
+            value = {};
+            attribute.value.expression.properties.forEach((prop) => {
+              const propName =
+                prop.key.type === 'StringLiteral'
+                  ? prop.key.value
+                  : prop.key.name;
+              if (prop.value.value !== undefined) {
+                value[propName] = prop.value.value;
+              }
+            });
+          } else {
+            value = attribute.value.expression.value;
+          }
+        } else if (attribute.value.type === 'JSXElement') {
+          value = attributesToObject(attribute.value.openingElement.attributes);
+        } else {
+          value = attribute.value.value;
+        }
 
-      if (value !== undefined) {
-        obj[key] = value;
+        if (value !== undefined) {
+          obj[key] = value;
+        }
       }
     });
     return obj;
   }
   function addRnuStyleIdInStyleArrayOfCOmponent(jsxAttrArray, styleId) {
     // find the style attribute
-    let styleAttr = jsxAttrArray.find((attr) => attr.name.name === 'style');
+    let styleAttr = jsxAttrArray.find((attr) => attr.name?.name === 'style');
     // insert the styleId in the style array
     // style can be an array or a single object
     if (styleAttr) {

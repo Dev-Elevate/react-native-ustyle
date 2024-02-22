@@ -59,33 +59,37 @@ module.exports = function(babel) {
     }
     const obj = {};
     attributes.forEach((attribute) => {
-      const key = resolver(attribute.name.name);
-      let value;
-      if (attribute.value.type === "JSXExpressionContainer") {
-        if (attribute.value.expression.type === "ObjectExpression") {
-          value = {};
-          attribute.value.expression.properties.forEach((prop) => {
-            const propName = prop.key.type === "StringLiteral" ? prop.key.value : prop.key.name;
-            if (prop.value.value !== void 0) {
-              value[propName] = prop.value.value;
-            }
-          });
-        } else {
-          value = attribute.value.expression.value;
-        }
-      } else if (attribute.value.type === "JSXElement") {
-        value = attributesToObject(attribute.value.openingElement.attributes);
+      if (t.isJSXSpreadAttribute(attribute)) {
+        return;
       } else {
-        value = attribute.value.value;
-      }
-      if (value !== void 0) {
-        obj[key] = value;
+        const key = resolver(attribute.name.name);
+        let value;
+        if (attribute.value.type === "JSXExpressionContainer") {
+          if (attribute.value.expression.type === "ObjectExpression") {
+            value = {};
+            attribute.value.expression.properties.forEach((prop) => {
+              const propName = prop.key.type === "StringLiteral" ? prop.key.value : prop.key.name;
+              if (prop.value.value !== void 0) {
+                value[propName] = prop.value.value;
+              }
+            });
+          } else {
+            value = attribute.value.expression.value;
+          }
+        } else if (attribute.value.type === "JSXElement") {
+          value = attributesToObject(attribute.value.openingElement.attributes);
+        } else {
+          value = attribute.value.value;
+        }
+        if (value !== void 0) {
+          obj[key] = value;
+        }
       }
     });
     return obj;
   }
   function addRnuStyleIdInStyleArrayOfCOmponent(jsxAttrArray, styleId2) {
-    let styleAttr = jsxAttrArray.find((attr) => attr.name.name === "style");
+    let styleAttr = jsxAttrArray.find((attr) => attr.name?.name === "style");
     if (styleAttr) {
       if (styleAttr.value.expression.type !== "ArrayExpression") {
         styleAttr.value.expression = t.arrayExpression([
