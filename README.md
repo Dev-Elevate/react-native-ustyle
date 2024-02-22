@@ -1,12 +1,21 @@
-# react-native-ustyle
+# react-native-ustyle [BETA]
 
-Easy and configurable utiltity styling props support for React Native
+Easy and configurable utility-style props support for React Native with zero runtime.
 
 ## Installation
 
 ```sh
 npm install react-native-ustyle
+npm install babel-plugin-react-native-ustyle --save-dev
 ```
+
+**OR**
+
+```sh
+yarn add react-native-ustyle
+yarn add babel-plugin-react-native-ustyle -D
+```
+
 
 ## Usage
 
