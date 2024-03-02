@@ -30,14 +30,44 @@ import type {
 type AllStyleTypesMerged = ViewStyle & TextStyle & ImageStyle;
 
 export type ConfigBuilder = {
-  [key: string]: keyof AllStyleTypesMerged;
+  aliases?: {
+    [key: string]: keyof AllStyleTypesMerged;
+  };
+  tokens?: {
+    [key: string]: {
+      [key: string]: string | number;
+    };
+  };
 };
 
 export interface ICustomConfig {}
+type Test = {
+  [key in keyof Omit<
+    ICustomConfig['tokens'],
+    'global'
+  > as `$${key}$${keyof Omit<ICustomConfig['tokens'], 'global'>[key] extends
+    | string
+    | number
+    | undefined
+    ? keyof Omit<ICustomConfig['tokens'], 'global'>[key]
+    : never}`]: key;
+};
+
+type globalTokens = keyof ICustomConfig['tokens']['global'];
 
 type ExtendedConfigType = {
-  [key in keyof ICustomConfig]?: ICustomConfig[key] extends keyof AllStyleTypesMerged
-    ? AllStyleTypesMerged[ICustomConfig[key]]
+  [key in keyof ICustomConfig['aliases']]?: ICustomConfig['aliases'][key] extends keyof AllStyleTypesMerged
+    ? //merge test types
+      // support keyof Test prefixed with - or + for negative or positive values
+
+
+        | (`-${keyof Test}` | keyof Test)
+        | (
+            | `-${keyof Test}`
+            | keyof Test
+          ) extends AllStyleTypesMerged[ICustomConfig['aliases'][key]]
+      ? (`-${keyof Test}` | keyof Test) | (string & {}) | `$${globalTokens}`
+      : `-${keyof Test}` | keyof Test | `$${globalTokens}`
     : never;
 };
 

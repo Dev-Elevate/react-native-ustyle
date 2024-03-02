@@ -5,13 +5,37 @@ const { parse } = require('@babel/parser');
 const { default: traverse } = require('@babel/traverse');
 
 function ObjectExpressionASTtoJSObject(AstNode) {
+  function processProperty(property) {
+    const propName =
+      property.key.type === 'StringLiteral'
+        ? property.key.value
+        : property.key.name;
+
+    if (property.value.type === 'ObjectExpression') {
+      return {
+        [propName]: ObjectExpressionASTtoJSObject(property.value),
+      };
+    }
+
+    if (property.value.type === 'ArrayExpression') {
+      return {
+        [propName]: property.value.elements.map((element) => {
+          if (element.type === 'ObjectExpression') {
+            return ObjectExpressionASTtoJSObject(element);
+          }
+          return element.value;
+        }),
+      };
+    }
+
+    return {
+      [propName]: property.value.value,
+    };
+  }
+
   let obj = {};
   AstNode.properties.forEach((prop) => {
-    const propName =
-      prop.key.type === 'StringLiteral' ? prop.key.value : prop.key.name;
-    if (prop.value.value !== undefined) {
-      obj[propName] = prop.value.value;
-    }
+    Object.assign(obj, processProperty(prop));
   });
   return obj;
 }
@@ -44,11 +68,41 @@ module.exports = function (babel) {
   let styleId = 0;
   let Styles = [];
   let styleExpression = [];
-  function resolver(name) {
-    if (name in CONFIG) {
-      return CONFIG[name];
+  function aliasResolver(name) {
+    if (name in CONFIG.aliases) {
+      return CONFIG.aliases[name];
     }
     return name;
+  }
+  function tokenResolver(token) {
+    //parse token into array
+    if (
+      typeof token === 'string' &&
+      (token.startsWith('$') || token.startsWith('-$'))
+    ) {
+      let tokenPath = token.split('$');
+
+      let isNeg = false;
+      if (tokenPath[0] === '-') {
+        isNeg = true;
+      }
+      tokenPath = tokenPath.slice(1);
+      // resolving for global tokens
+      if (tokenPath.length === 1) {
+        tokenPath = ['global', tokenPath[0]];
+      }
+      let value = CONFIG.tokens;
+      tokenPath.forEach((key, ind) => {
+        if (value) {
+          value = value[key];
+        }
+      });
+
+      if (value) {
+        return isNeg ? -1 * value : value;
+      }
+    }
+    return token;
   }
   function checkIfStylesheetImportedAndImport(programPath) {
     let importDeclaration = programPath.node.body.find(
@@ -84,7 +138,7 @@ module.exports = function (babel) {
       if (t.isJSXSpreadAttribute(attribute)) {
         return;
       } else {
-        const key = resolver(attribute.name.name);
+        const key = aliasResolver(attribute.name.name);
         let value;
         if (attribute.value.type === 'JSXExpressionContainer') {
           if (attribute.value.expression.type === 'ObjectExpression') {
@@ -108,7 +162,7 @@ module.exports = function (babel) {
         }
 
         if (value !== undefined) {
-          obj[key] = value;
+          obj[key] = tokenResolver(value);
         }
       }
     });
