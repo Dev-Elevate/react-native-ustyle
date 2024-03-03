@@ -7,7 +7,7 @@ const {
   aliasResolver,
   tokenResolver,
   ObjectExpressionASTtoJSObject,
-  addRnuStyleIdInStyleArrayOfCOmponent,
+  addRnuStyleIdInStyleArrayOfComponent,
   checkIfStylesheetImportedAndImport,
 } = require('./utils');
 
@@ -119,7 +119,7 @@ module.exports = function (babel) {
           return;
         if (importedComponents.includes(path.node.name.name)) {
           // Create a variable declaration for the object
-          addRnuStyleIdInStyleArrayOfCOmponent(path.node.attributes, styleId);
+          addRnuStyleIdInStyleArrayOfComponent(path.node.attributes, styleId);
           styleExpression.push(
             t.objectProperty(
               t.identifier('styles' + styleId++),

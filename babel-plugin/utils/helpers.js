@@ -60,7 +60,7 @@ function ObjectExpressionASTtoJSObject(AstNode) {
   return obj;
 }
 
-function addRnuStyleIdInStyleArrayOfCOmponent(jsxAttrArray, styleId) {
+function addRnuStyleIdInStyleArrayOfComponent(jsxAttrArray, styleId) {
   // find the style attribute
   let styleAttr = jsxAttrArray.find((attr) => attr.name?.name === 'style');
   // insert the styleId in the style array
@@ -90,5 +90,5 @@ function addRnuStyleIdInStyleArrayOfCOmponent(jsxAttrArray, styleId) {
 module.exports = {
   checkIfStylesheetImportedAndImport,
   ObjectExpressionASTtoJSObject,
-  addRnuStyleIdInStyleArrayOfCOmponent,
+  addRnuStyleIdInStyleArrayOfComponent,
 };

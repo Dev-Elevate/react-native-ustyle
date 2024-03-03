@@ -2,13 +2,13 @@ const { aliasResolver, tokenResolver } = require('./resolvers');
 const {
   checkIfStylesheetImportedAndImport,
   ObjectExpressionASTtoJSObject,
-  addRnuStyleIdInStyleArrayOfCOmponent,
+  addRnuStyleIdInStyleArrayOfComponent,
 } = require('./helpers');
 
 module.exports = {
   ObjectExpressionASTtoJSObject,
   checkIfStylesheetImportedAndImport,
-  addRnuStyleIdInStyleArrayOfCOmponent,
+  addRnuStyleIdInStyleArrayOfComponent,
   aliasResolver,
   tokenResolver,
 };
