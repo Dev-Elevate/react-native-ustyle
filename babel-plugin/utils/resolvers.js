@@ -1,5 +1,5 @@
 function aliasResolver(name, CONFIG) {
-  if (name in CONFIG.aliases) {
+  if (name in CONFIG?.aliases) {
     return CONFIG.aliases[name];
   }
   return name;

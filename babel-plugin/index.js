@@ -51,34 +51,72 @@ module.exports = function (babel) {
 
     const obj = {};
     attributes.forEach((attribute) => {
-      if (t.isJSXSpreadAttribute(attribute)) {
+      if (
+        t.isJSXSpreadAttribute(attribute) ||
+        !CONFIG?.aliases[attribute?.name?.name]
+      ) {
         return;
       } else {
-        const key = aliasResolver(attribute.name.name, CONFIG);
-        let value;
-        if (attribute.value.type === 'JSXExpressionContainer') {
-          if (attribute.value.expression.type === 'ObjectExpression') {
-            value = {};
-            attribute.value.expression.properties.forEach((prop) => {
-              const propName =
-                prop.key.type === 'StringLiteral'
-                  ? prop.key.value
-                  : prop.key.name;
-              if (prop.value.value !== undefined) {
-                value[propName] = prop.value.value;
+        // Support for multi aliases
+        if (Array.isArray(aliasResolver(attribute.name.name, CONFIG))) {
+          aliasResolver(attribute.name.name, CONFIG).forEach((key) => {
+            let value;
+            if (attribute.value.type === 'JSXExpressionContainer') {
+              if (attribute.value.expression.type === 'ObjectExpression') {
+                value = {};
+                attribute.value.expression.properties.forEach((prop) => {
+                  const propName =
+                    prop.key.type === 'StringLiteral'
+                      ? prop.key.value
+                      : prop.key.name;
+                  if (prop.value.value !== undefined) {
+                    value[propName] = prop.value.value;
+                  }
+                });
+              } else {
+                value = attribute.value.expression.value;
               }
-            });
-          } else {
-            value = attribute.value.expression.value;
-          }
-        } else if (attribute.value.type === 'JSXElement') {
-          value = attributesToObject(attribute.value.openingElement.attributes);
-        } else {
-          value = attribute.value.value;
-        }
+            } else if (attribute.value.type === 'JSXElement') {
+              value = attributesToObject(
+                attribute.value.openingElement.attributes
+              );
+            } else {
+              value = attribute.value.value;
+            }
 
-        if (value !== undefined) {
-          obj[key] = tokenResolver(value, CONFIG);
+            if (value !== undefined) {
+              obj[key] = tokenResolver(value, CONFIG);
+            }
+          });
+        } else {
+          const key = aliasResolver(attribute.name.name, CONFIG);
+          let value;
+          if (attribute.value.type === 'JSXExpressionContainer') {
+            if (attribute.value.expression.type === 'ObjectExpression') {
+              value = {};
+              attribute.value.expression.properties.forEach((prop) => {
+                const propName =
+                  prop.key.type === 'StringLiteral'
+                    ? prop.key.value
+                    : prop.key.name;
+                if (prop.value.value !== undefined) {
+                  value[propName] = prop.value.value;
+                }
+              });
+            } else {
+              value = attribute.value.expression.value;
+            }
+          } else if (attribute.value.type === 'JSXElement') {
+            value = attributesToObject(
+              attribute.value.openingElement.attributes
+            );
+          } else {
+            value = attribute.value.value;
+          }
+
+          if (value !== undefined) {
+            obj[key] = tokenResolver(value, CONFIG);
+          }
         }
       }
     });

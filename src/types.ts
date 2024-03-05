@@ -29,9 +29,12 @@ import type {
 // type AllStyleTypes = ViewStyle | TextStyle | ImageStyle;
 type AllStyleTypesMerged = ViewStyle & TextStyle & ImageStyle;
 
+// type of array that takes all the keyof AllStyleTypesMerged as a value in the array
+type AllStyleTypesArray = Array<keyof AllStyleTypesMerged>;
+
 export type ConfigBuilder = {
   aliases?: {
-    [key: string]: keyof AllStyleTypesMerged;
+    [key: string]: keyof AllStyleTypesMerged | AllStyleTypesArray;
   };
   tokens?: {
     [key: string]: {
@@ -68,6 +71,19 @@ type ExtendedConfigType = {
           ) extends AllStyleTypesMerged[ICustomConfig['aliases'][key]]
       ? (`-${keyof Test}` | keyof Test) | (string & {}) | `$${globalTokens}`
       : `-${keyof Test}` | keyof Test | `$${globalTokens}`
+    : ICustomConfig['aliases'][key] extends AllStyleTypesArray
+    ?
+        | (`-${keyof Test}` | keyof Test)
+        | (
+            | `-${keyof Test}`
+            | keyof Test
+          ) extends AllStyleTypesMerged[ICustomConfig['aliases'][key][0]]
+      ? (`-${keyof Test}` | keyof Test) | (string & {}) | `$${globalTokens}`
+      :
+          | `-${keyof Test}`
+          | keyof Test
+          | `$${globalTokens}`
+          | AllStyleTypesMerged[ICustomConfig['aliases'][key][0]]
     : never;
 };
 

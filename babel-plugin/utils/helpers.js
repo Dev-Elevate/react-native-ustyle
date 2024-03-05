@@ -1,4 +1,4 @@
-import * as t from '@babel/types';
+const t = require('@babel/types');
 
 function checkIfStylesheetImportedAndImport(programPath) {
   let importDeclaration = programPath.node.body.find(
