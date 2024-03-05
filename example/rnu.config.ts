@@ -15,6 +15,10 @@ export const CONFIG = createConfig({
     bc: 'borderColor',
     bw: 'borderWidth',
     mr: 'marginRight',
+    roundedTop: ['borderTopLeftRadius', 'borderTopRightRadius'],
+    roundedBottom: ['borderBottomLeftRadius', 'borderBottomRightRadius'],
+    roundedLeft: ['borderTopLeftRadius', 'borderBottomLeftRadius'],
+    roundedRight: ['borderTopRightRadius', 'borderBottomRightRadius'],
   },
   tokens: {
     global: {
