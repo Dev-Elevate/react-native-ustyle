@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-react-native-ustyle",
-  "version": "1.2.0-alpha.2",
+  "version": "1.2.0",
   "description": "Official support babel plugin for react-native-ustyle",
   "main": "out.js",
   "module": "out.js",

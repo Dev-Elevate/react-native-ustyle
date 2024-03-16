@@ -1,6 +1,6 @@
 {
   "name": "react-native-ustyle",
-  "version": "1.4.0-alpha.4",
+  "version": "1.4.0",
   "description": "Easy and configurable utiltity styling props support for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
