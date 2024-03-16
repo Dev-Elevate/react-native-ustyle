@@ -57,14 +57,6 @@ function traceAndUpdateImportedComponentsForVC(
       }
     },
   });
-  console.log('importedComponents', importedComponents);
-  // console.log(
-  //   'traceAndUpdateImportedComponentsForVC',
-  //   programPath.parentPath.parentPath,
-  //   localName,
-  //   importedComponents
-  // );
-
   // CONFIG.components[localName].components.forEach((component) => {
   //   if (importedComponents.includes(component)) {
   //     return;
@@ -81,6 +73,7 @@ module.exports = function (babel) {
   let importName = 'react-native-ustyle';
   let VIRTUAL_COMPONENT_EXPORT_NAME = 'VC';
   let virtualComponentLocalImportName = 'VC';
+  let rnuImportDeclarationPath;
   let importedComponents = [];
   let styleId = 0;
   let Styles = [];
@@ -186,6 +179,7 @@ module.exports = function (babel) {
         )
           return;
         if (path.node.source.value === importName) {
+          rnuImportDeclarationPath = path;
           // path.node.specifiers.push(
           //   t.importSpecifier(
           //     t.identifier("StyleSheet"),
@@ -203,7 +197,7 @@ module.exports = function (babel) {
                   path.node.local.name,
                   importedComponents
                 );
-                // path.remove();
+                path.remove();
               }
             },
           });
@@ -236,17 +230,12 @@ module.exports = function (babel) {
           // Create a variable declaration for the object
           addRnuStyleIdInStyleArrayOfComponent(path.node.attributes, styleId);
           if (isVC) {
-            console.log(
-              isVC,
-              path.node.name.name,
-              CONFIG.components[path.node.name.name]
-            );
             styleExpression.push(
               t.objectProperty(
                 t.identifier('styles' + styleId++),
                 t.valueToNode({
-                  ...attributesToObject(path.node.attributes),
                   ...(CONFIG.components[path.node.name.name]?.baseStyle ?? {}),
+                  ...attributesToObject(path.node.attributes),
                 })
               )
             );
@@ -275,6 +264,20 @@ module.exports = function (babel) {
               }
             });
             path.node.name.name = CONFIG.components[path.node.name.name].tag;
+            if (
+              rnuImportDeclarationPath.node?.specifiers.find(
+                (specifier) => specifier.local.name === path.node.name.name
+              )
+            ) {
+              path.node.name.name = path.node.name.name;
+            } else {
+              rnuImportDeclarationPath.node?.specifiers.push(
+                t.importSpecifier(
+                  t.identifier(path.node.name.name),
+                  t.identifier(path.node.name.name)
+                )
+              );
+            }
           } else {
             styleExpression.push(
               t.objectProperty(
