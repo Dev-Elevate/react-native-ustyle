@@ -21,24 +21,59 @@ const configAST = parse(fileContent, {
   plugins: ['typescript'],
 });
 
-traverse(configAST, {
-  CallExpression(path) {
-    if (path.node.callee.name === 'createConfig') {
-      if (ObjectExpressionASTtoJSObject(path.node.arguments[0].expression)) {
-        CONFIG = ObjectExpressionASTtoJSObject(
-          path.node.arguments[0].expression
-        );
+if (configAST) {
+  traverse(configAST, {
+    CallExpression(path) {
+      if (path.node.callee.name === 'createConfig') {
+        if (ObjectExpressionASTtoJSObject(path.node.arguments[0].expression)) {
+          CONFIG = ObjectExpressionASTtoJSObject(
+            path.node.arguments[0].expression
+          );
+        }
       }
-    }
-  },
-});
+    },
+  });
+}
 
 // -------------------------------------------------------------------------------------------------
+
+function traceAndUpdateImportedComponentsForVC(
+  programPath,
+  localName,
+  importedComponents
+) {
+  programPath.traverse({
+    VariableDeclarator(path) {
+      if (
+        localName === path.node.init.name &&
+        path.node.id.type === 'ObjectPattern'
+      ) {
+        path.node.id.properties.forEach((property) => {
+          if (property.type === 'ObjectProperty') {
+            importedComponents.push(property.key.name);
+          }
+        });
+        path.remove();
+      }
+    },
+  });
+  // CONFIG.components[localName].components.forEach((component) => {
+  //   if (importedComponents.includes(component)) {
+  //     return;
+  //   } else {
+  //     importedComponents.push(component);
+  //     traceAndUpdateImportedComponentsForVC(component, importedComponents);
+  //   }
+  // });
+}
 
 module.exports = function (babel) {
   const { types: t } = babel;
 
   let importName = 'react-native-ustyle';
+  let VIRTUAL_COMPONENT_EXPORT_NAME = 'VC';
+  let virtualComponentLocalImportName = 'VC';
+  let rnuImportDeclarationPath;
   let importedComponents = [];
   let styleId = 0;
   let Styles = [];
@@ -122,48 +157,135 @@ module.exports = function (babel) {
     });
     return obj;
   }
+  function isVirtualComponentJSXElement(CONFIG, localImportName, path) {
+    if (
+      path.node.name.type === 'JSXMemberExpression' &&
+      path.node.name.object.name === localImportName &&
+      CONFIG.components[path.node.name.property.name]
+    ) {
+      return true;
+    }
+    return false;
+  }
 
   return {
     name: 'ast-transform', // not required
     visitor: {
       ImportDeclaration(path, opts) {
         if (
-          opts.filename.includes('node_modules') ||
-          opts.filename.includes('.expo') ||
-          opts.filename.includes('.next')
+          opts?.filename?.includes('node_modules') ||
+          opts?.filename?.includes('.expo') ||
+          opts?.filename?.includes('.next')
         )
           return;
         if (path.node.source.value === importName) {
+          rnuImportDeclarationPath = path;
           // path.node.specifiers.push(
           //   t.importSpecifier(
           //     t.identifier("StyleSheet"),
           //     t.identifier("StyleSheet")
           //   )
           // );
-          path.traverse({
+          path?.traverse({
             ImportSpecifier(path) {
-              importedComponents.push(path.node.local.name);
+              if (path.node?.imported?.name !== VIRTUAL_COMPONENT_EXPORT_NAME) {
+                importedComponents.push(path.node?.local?.name);
+              } else {
+                virtualComponentLocalImportName = path.node?.local?.name;
+                traceAndUpdateImportedComponentsForVC(
+                  path.parentPath.parentPath,
+                  path.node.local.name,
+                  importedComponents
+                );
+                path.remove();
+              }
             },
           });
           path.node.source.value = 'react-native';
         }
       },
       JSXOpeningElement(path, f, o) {
+        let isVC = false;
         if (
-          f.filename.includes('node_modules') ||
-          f.filename.includes('.expo') ||
-          f.filename.includes('.next')
+          f?.filename?.includes('node_modules') ||
+          f?.filename?.includes('.expo') ||
+          f?.filename?.includes('.next')
         )
           return;
+        if (
+          isVirtualComponentJSXElement(
+            CONFIG,
+            virtualComponentLocalImportName,
+            path
+          )
+        ) {
+          let JSXTag = path.node.name.property.name;
+          path.node.name = t.jsxIdentifier(JSXTag);
+          importedComponents.push(JSXTag);
+        }
         if (importedComponents.includes(path.node.name.name)) {
+          if (CONFIG.components[path.node.name.name]) {
+            isVC = true;
+          }
           // Create a variable declaration for the object
           addRnuStyleIdInStyleArrayOfComponent(path.node.attributes, styleId);
-          styleExpression.push(
-            t.objectProperty(
-              t.identifier('styles' + styleId++),
-              t.valueToNode(attributesToObject(path.node.attributes))
-            )
-          );
+          if (isVC) {
+            styleExpression.push(
+              t.objectProperty(
+                t.identifier('styles' + styleId++),
+                t.valueToNode({
+                  ...(CONFIG.components[path.node.name.name]?.baseStyle ?? {}),
+                  ...attributesToObject(path.node.attributes),
+                })
+              )
+            );
+            // check if variants are present in attributes and add them to the styleExpression
+            path.node.attributes.forEach((attributeNode) => {
+              if (
+                CONFIG.components[path.node.name.name]?.variants?.[
+                  attributeNode.name.name
+                ]
+              ) {
+                const variantName = attributeNode.name.name;
+                const variantValue =
+                  CONFIG.components[path.node.name.name]?.variants?.[
+                    variantName
+                  ][attributeNode?.value?.value];
+                addRnuStyleIdInStyleArrayOfComponent(
+                  path.node.attributes,
+                  styleId
+                );
+                styleExpression.push(
+                  t.objectProperty(
+                    t.identifier('styles' + styleId++),
+                    t.valueToNode(variantValue)
+                  )
+                );
+              }
+            });
+            path.node.name.name = CONFIG.components[path.node.name.name].tag;
+            if (
+              rnuImportDeclarationPath.node?.specifiers.find(
+                (specifier) => specifier.local.name === path.node.name.name
+              )
+            ) {
+              path.node.name.name = path.node.name.name;
+            } else {
+              rnuImportDeclarationPath.node?.specifiers.push(
+                t.importSpecifier(
+                  t.identifier(path.node.name.name),
+                  t.identifier(path.node.name.name)
+                )
+              );
+            }
+          } else {
+            styleExpression.push(
+              t.objectProperty(
+                t.identifier('styles' + styleId++),
+                t.valueToNode(attributesToObject(path.node.attributes))
+              )
+            );
+          }
           // check if rnuStyles is already declared
           let declaration = f.file.ast.program.body.find(
             (node) =>
@@ -193,9 +315,9 @@ module.exports = function (babel) {
       },
       Program(path, opts) {
         if (
-          opts.filename.includes('node_modules') ||
-          opts.filename.includes('.expo') ||
-          opts.filename.includes('.next')
+          opts?.filename?.includes('node_modules') ||
+          opts?.filename?.includes('.expo') ||
+          opts?.filename?.includes('.next')
         )
           return;
         checkIfStylesheetImportedAndImport(path);

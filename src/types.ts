@@ -41,8 +41,24 @@ export type ConfigBuilder = {
       [key: string]: string | number;
     };
   };
+  components?: {
+    [key: string]: {
+      tag: string;
+      variants?: {
+        [key: string]: {
+          [variant: string]: {
+            [key in keyof AllStyleTypesMerged]?: string | number;
+          };
+        };
+      };
+      baseStyle?: {
+        [key in keyof AllStyleTypesMerged]?: string | number;
+      };
+    };
+  };
 };
 
+// @ts-ignore
 export interface ICustomConfig {}
 type Test = {
   [key in keyof Omit<
@@ -70,7 +86,11 @@ type ExtendedConfigType = {
             | keyof Test
           ) extends AllStyleTypesMerged[ICustomConfig['aliases'][key]]
       ? (`-${keyof Test}` | keyof Test) | (string & {}) | `$${globalTokens}`
-      : `-${keyof Test}` | keyof Test | `$${globalTokens}`
+      :
+          | `-${keyof Test}`
+          | keyof Test
+          | `$${globalTokens}`
+          | AllStyleTypesMerged[ICustomConfig['aliases'][key]]
     : ICustomConfig['aliases'][key] extends AllStyleTypesArray
     ?
         | (`-${keyof Test}` | keyof Test)
@@ -122,3 +142,45 @@ export type ExtendedTouchableWithoutFeedbackProps =
   TouchableWithoutFeedbackProps & ExtendedConfigType;
 export type ExtendedTouchableNativeFeedbackProps =
   TouchableNativeFeedbackProps & ExtendedConfigType;
+// 22
+interface VirtualComponentTagType<T> {
+  View: React.FC<ExtendedViewProps & T>;
+  Text: React.FC<ExtendedTextProps & T>;
+  TextInput: React.FC<ExtendedTextInputProps & T>;
+  Image: React.FC<ExtendedImageProps & T>;
+  Modal: React.FC<ExtendedModalProps & T>;
+  Switch: React.FC<ExtendedSwitchProps & T>;
+  FlatList: React.FC<ExtendedFlatListProps & T>;
+  ScrollView: React.FC<ExtendedScrollViewProps & T>;
+  SectionList: React.FC<ExtendedSectionListProps & T>;
+  KeyboardAvoidingView: React.FC<ExtendedKeyboardAvoidingViewProps & T>;
+  RefreshControl: React.FC<ExtendedRefreshControlProps & T>;
+  ImageBackground: React.FC<ExtendedImageBackgroundProps & T>;
+  Button: React.FC<ExtendedButtonProps & T>;
+  Pressable: React.FC<ExtendedPressableProps & T>;
+  ModalBase: React.FC<ExtendedModalBaseProps & T>;
+  Accessibility: React.FC<ExtendedAccessibilityProps & T>;
+  VirtualizedList: React.FC<ExtendedVirtualizedListProps & T>;
+  TouchableOpacity: React.FC<ExtendedTouchableOpacityProps & T>;
+  ActivityIndicator: React.FC<ExtendedActivityIndicatorProps & T>;
+  TouchableHighlight: React.FC<ExtendedTouchableHighlightProps & T>;
+  TouchableWithoutFeedback: React.FC<ExtendedTouchableWithoutFeedbackProps & T>;
+  TouchableNativeFeedback: React.FC<ExtendedTouchableNativeFeedbackProps & T>;
+}
+
+declare module 'react-native-ustyle' {
+  export type VirtualComponentType = {
+    [key in keyof ICustomConfig['components']]:
+      | VirtualComponentTagType<
+          // @ts-ignore
+          ICustomConfig['components'][key]['variants'] extends undefined
+            ? { helo: 'world' }
+            : {
+                // @ts-ignore
+                [variant in keyof ICustomConfig['components'][key]['variants']]?: keyof ICustomConfig['components'][key]['variants'][variant];
+              }
+        >[ICustomConfig['components'][key]['tag']];
+  };
+
+  export const VC: VirtualComponentType;
+}
