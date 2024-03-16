@@ -36,6 +36,74 @@ export const CONFIG = createConfig({
       '7': 28,
     },
   },
+  components: {
+    Box: {
+      tag: 'View',
+      baseStyle: {
+        padding: 8,
+        backgroundColor: 'blue',
+      },
+      variants: {
+        variant: {
+          primary: {
+            backgroundColor: '#0F006F',
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+    Random2: {
+      tag: 'View',
+      baseStyle: {
+        padding: 8,
+        backgroundColor: '$secondary',
+      },
+      variants: {
+        size: {
+          xl: {},
+        },
+        variant: {
+          primary: {
+            backgroundColor: '$primary',
+            borderRadius: 8,
+          },
+          sec: {},
+        },
+      },
+    },
+    Center: {
+      tag: 'View',
+      baseStyle: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      // variants: {
+      //   variant: {
+      //     primary: {
+      //       backgroundColor: '$primary',
+      //       borderRadius: 8,
+      //     },
+      //   },
+      // },
+    },
+    Heading: {
+      tag: 'Text',
+      baseStyle: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+      },
+      variants: {
+        variant: {
+          primary: {
+            backgroundColor: '$primary',
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+  },
 } as const);
 
 type ConfigType = typeof CONFIG;
