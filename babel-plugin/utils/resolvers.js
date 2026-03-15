@@ -5,7 +5,7 @@ function aliasResolver(name, CONFIG) {
   return name;
 }
 function tokenResolver(token, CONFIG) {
-  //parse token into array
+  // Resolve design token strings like '$color$primary' or '-$spacing$md'
   if (
     typeof token === 'string' &&
     (token.startsWith('$') || token.startsWith('-$'))
@@ -22,7 +22,7 @@ function tokenResolver(token, CONFIG) {
       tokenPath = ['global', tokenPath[0]];
     }
     let value = CONFIG.tokens;
-    tokenPath.forEach((key, ind) => {
+    tokenPath.forEach((key) => {
       if (value) {
         value = value[key];
       }

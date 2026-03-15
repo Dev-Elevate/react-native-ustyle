@@ -1,30 +1,8 @@
 const t = require('@babel/types');
 
-function checkIfStylesheetImportedAndImport(programPath) {
-  let importDeclaration = programPath.node.body.find(
-    (node) =>
-      node.type === 'ImportDeclaration' && node.source.value === 'react-native'
-  );
-  if (importDeclaration) {
-    // delete the old importspecifier
-    // importDeclaration.specifiers = importDeclaration.specifiers.filter(
-    //   (specifier) => specifier.imported.name !== "StyleSheet"
-    // );
-    // programPath.node.body.unshift(
-    //   t.importDeclaration(
-    //     [
-    //       t.importSpecifier(
-    //         t.identifier("StyleSheet"),
-    //         t.identifier("StyleSheet")
-    //       ),
-    //     ],
-    //     t.stringLiteral("react-native")
-    //   )
-    // );
-  }
-}
+function checkIfStylesheetImportedAndImport(programPath) {}
 
-function ObjectExpressionASTtoJSObject(AstNode) {
+function ObjectExpressionASTtoJSObject(astNode) {
   function processProperty(property) {
     const propName =
       property.key.type === 'StringLiteral'
@@ -54,7 +32,7 @@ function ObjectExpressionASTtoJSObject(AstNode) {
   }
 
   let obj = {};
-  AstNode.properties.forEach((prop) => {
+  astNode.properties.forEach((prop) => {
     Object.assign(obj, processProperty(prop));
   });
   return obj;
